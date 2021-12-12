@@ -24,13 +24,7 @@ router.get('/booklist', async (req, res) => {
 router.get('/book/:id', async (req, res) => {
     const id = req.params.id
     try {
-        const findid = {
-            selector : {
-                _id: id
-            },
-            fields: [ "name", "type", "author", "amount", "producer" ]
-        }
-        const bookid = await db.find(findid)
+        const bookid = await db.get(id)
         res.status(200).send(bookid)
     } catch (error) {
         console.error(error)
@@ -50,6 +44,32 @@ router.post('/books/addBook', async (req, res) => {
         }
         await db.insert(book)
         res.status(201).send(book)
+    } catch (error) {
+        console.error(error)
+    }
+});
+
+// Delete book
+router.delete('/book/delete/:id', async (req, res) => {
+    const id = req.params.id
+    try {
+        const bookid = await db.get(id)
+        const _rev = bookid._rev
+        const _id = id
+        const rmvBook = await db.destroy(_id,_rev)
+        res.status(200).send(rmvBook)
+    } catch (error) {
+        console.error(error)
+    }
+});
+
+// TEST
+router.get('/test/:id', async (req, res) => {
+    const id = req.params.id
+    try {
+        const test = await db.get(id)
+        const rev = test._rev
+        res.send(rev)
     } catch (error) {
         console.error(error)
     }

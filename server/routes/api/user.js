@@ -1,7 +1,7 @@
-const express = require('express')
+const express = require('express');
+const req = require('express/lib/request');
+const { send } = require('express/lib/response');
 const couch = require('./../../db/couch')
-const dbname = 'users';
-const dbviewURL = "_design/users_view/_view/view-all";
 const db = couch.use('users')
 
 const router = express.Router();
@@ -31,22 +31,40 @@ router.get('/users', async (req, res) => {
 });
 
 // Read detail user
-router.get('/user/:id', async (req, res) => {
+router.get('/user/profile/:id', async (req, res) => {
     const id = req.params.id
     try {
-        const findid = {
-            selector : {
-                _id: id
-            },
-            fields: [ "fullname", "email", "phone", "email", "username", "password" ]
-        }
-        const userid = await db.find(findid)
-        if(!userid) {
+        const user = await db.get(id)
+        if(!user) {
             res.status(404).send()
         }
-        res.status(200).send(userid)
+        res.status(200).send(user)
     } catch (error) {
         console.error(error)
+    }
+});
+
+// Update user profile (fix with layout to edit again)
+router.patch('/user/editprofile/:id', async (req, res) => {
+    const id = req.params.id
+    try {
+        const getUser = await db.get(id)
+        const rev = getUser._rev
+        const updateUser = {
+            fullname: req.body.fullname,
+            email: req.body.email,
+            phone: req.body.phone,
+            username: req.body.username,
+            password: req.body.password,
+            updateAt: new Date()
+        }
+        const sendUpdate = await db.insert({ 
+            _id: id, 
+            _rev: rev, 
+            updateUser })
+        res.status(200).send(sendUpdate)
+    } catch (error) {
+        console.error(error)   
     }
 });
 
@@ -86,28 +104,21 @@ router.post('/signin', (req, res) => {
     }catch (e) {
         console.log(e)
     }
-
-    // const queryUser = {
-    //     username,
-    //     password
-    // }
-
-    // await couch.get(dbname, dbviewURL, queryUser).then((data, headers, status) => {
-    //         res.send(data)
-    //         console.log('Login successful!')
-    // }, (err) => {
-    //     res.send(err)
-    // })
 });
 
-// Read all doc in users
-// router.get('/users', async (req, res) => {
-//     await couch.get(dbname, dbviewURL).then((data, headers, status) => {
-//             console.log(data.data.rows)
-//             res.send(data.data.rows)
-//     }, (err) => {
-//         res.send(err)
-//     })  
-// });
+// Delete user
+router.delete('/user/delete/:id', async (req, res) => {
+    const id = req.params.id
+    try {
+        const userid = await db.get(id)
+        const _rev = userid._rev
+        const _id = id
+        const rmvUser = await db.destroy(_id,_rev)
+        res.status(200).send(rmvUser)
+    } catch (error) {
+        console.error(error)
+    }
+});
+
 
 module.exports = router;
