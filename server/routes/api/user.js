@@ -21,10 +21,10 @@ const router = express.Router();
 router.get('/users', async (req, res) => {
     
     try {
-        const userList = await db.list({include_docs: true})
+        const userlist = await db.view('users_view', 'view-all')
 
-        console.log(userList)
-        res.send(userList.rows)
+        console.log(userlist)
+        res.send(userlist.rows)
     } catch (error) {
         console.error(error)
     }
@@ -77,6 +77,7 @@ router.post('/register', async (req, res) => {
             phone: req.body.phone,
             username: req.body.username,
             password: req.body.password,
+            role: req.body.role,
             createAt: new Date()
         }
         await db.insert(user)
@@ -87,19 +88,37 @@ router.post('/register', async (req, res) => {
 });
 
 // Sign In
-router.post('/signin', (req, res) => {
+router.post('/signin', async (req, res) => {
     const username = req.body.username;
     const password = req.body.password;
 
     try {
-        if(username === 'lanpui' && password === 'lanpuibanhwet') {
-            res.status(200).send('Admin is login succesful!')
-        }else if(username === 'lienlien' && password === 'lien123'){
-            res.status(200).send('Librarian is login succesful!')
-        }else if(username === 'henry' && password === 'henry123'){
-            res.status(200).send('Reader is login succesful!')
-        }else {
-            res.send('ACC is not available!')
+        // if(username === 'lanpui' && password === 'lanpuibanhwet') {
+        //     res.status(200).send('Admin is login succesful!')
+        // }else if(username === 'lienlien' && password === 'lien123'){
+        //     res.status(200).send('Librarian is login succesful!')
+        // }else if(username === 'henry' && password === 'henry123'){
+        //     res.status(200).send('Reader is login succesful!')
+        // }else {
+        //     res.send('ACC is not available!')
+        // }
+
+        const find_user = {
+            selector : {
+                username: username,
+                password: password
+            },
+            fields: [ "_id", "fullname", "email", "phone", "email", "username", "password", "role" ]
+        }
+        const userid = await db.find(find_user)
+        console.log(userid)
+        if(userid) {
+            res.status(200).send(userid)
+        }else if(!userid){
+            res.status(404).send('Cannot found user!')
+        }
+        else{
+            res.status(500).send("Try again!")
         }
     }catch (e) {
         console.log(e)
