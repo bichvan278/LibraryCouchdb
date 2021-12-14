@@ -50,18 +50,20 @@ router.patch('/user/editprofile/:id', async (req, res) => {
     try {
         const getUser = await db.get(id)
         const rev = getUser._rev
-        const updateUser = {
-            fullname: req.body.fullname,
-            email: req.body.email,
-            phone: req.body.phone,
-            username: req.body.username,
-            password: req.body.password,
-            updateAt: new Date()
-        }
+
+        const fullname = req.body.fullname;
+        const email = req.body.email;
+        const phone = req.body.phone;
+        const username = req.body.username;
+        const password = req.body.password;
+        const updateAt = new Date();
+        
         const sendUpdate = await db.insert({ 
             _id: id, 
             _rev: rev, 
-            updateUser })
+            fullname, email, phone, username, password, updateAt 
+        })
+
         res.status(200).send(sendUpdate)
     } catch (error) {
         console.error(error)   

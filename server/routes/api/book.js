@@ -49,6 +49,37 @@ router.post('/books/addBook', async (req, res) => {
     }
 });
 
+// Update book by ID (fix with layout to edit again)
+router.patch('/book/editBook/:id', async (req, res) => {
+    const id = req.params.id
+    try {
+        const getBook = await db.get(id)
+        const rev = getUser._rev
+
+        const name = req.body.name;
+        const type = req.body.type;
+        const author = req.body.author;
+        const producer = req.body.producer;
+        const amount = req.body.amount;
+        const updateAt = new Date();
+
+        const sendUpdate = await db.insert({ 
+            _id: id, 
+            _rev: rev, 
+            name,
+            type,
+            author,
+            producer,
+            amount,
+            updateAt
+        })
+
+        res.status(200).send(sendUpdate)
+    } catch (error) {
+        console.error(error)   
+    }
+});
+
 // Delete book
 router.delete('/book/delete/:id', async (req, res) => {
     const id = req.params.id
