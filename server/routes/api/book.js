@@ -54,7 +54,7 @@ router.patch('/book/editBook/:id', async (req, res) => {
     const id = req.params.id
     try {
         const getBook = await db.get(id)
-        const rev = getUser._rev
+        const rev = getBook._rev
 
         const name = req.body.name;
         const type = req.body.type;
